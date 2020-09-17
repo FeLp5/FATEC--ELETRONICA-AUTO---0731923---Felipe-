@@ -29,8 +29,7 @@
 
 
 
-#define setaE LATDbits.LATD7
-#define setaD LATDbits.LATD0
+#define seta LATD
 #define B1 PORTBbits.RB0
 #define B2 PORTBbits.RB1
 
@@ -46,19 +45,18 @@ void main(void)
     {
         if(B1==0)
         {
-            setaE = 1;
+            seta = 240;
             delay_ms(500);
-            setaE = 0;
+            seta = 0;
             delay_ms(500);
         }else if(B2==0)
         {
-            setaD = 1;
+            seta = 15;
             delay_ms(500);
-            setaD = 0;
+            seta = 0;
             delay_ms(100);
         }else{
-            setaE = 0;
-            setaD = 0;
+            seta = 0;
             
         }
     }
