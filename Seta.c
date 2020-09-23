@@ -33,35 +33,69 @@
 #define B1 PORTBbits.RB0
 #define B2 PORTBbits.RB1
 
-
 void delay_ms(unsigned int tempo);
 void main(void) 
 {  
+    unsigned int i = 16, d=8, a=0, m=0;
+    /*unsigned int inc[4] = {16,32,64,128};
+    unsigned int dec[4] = {8,4,2,1};*/
     ADCON1 = 0x0F;
     TRISB = 0b11111111;
     TRISD = 0b00000000;
-    delay_ms(100);
+    LATD = 0;
+    delay_ms(200);
     while(1)
     {
-        if(B1==0)
-        {
-            seta = 240;
-            delay_ms(500);
+    /*    if(!B1 && i<4){
+            seta = inc[i];
+            delay_ms(0);
+            i++;
+        }else if(i>3){
+            i=0;
+            seta = inc[i];
+        }else if(B1){
+            i=0;
             seta = 0;
-            delay_ms(500);
-        }else if(B2==0)
-        {
-            seta = 15;
-            delay_ms(500);
-            seta = 0;
-            delay_ms(100);
-        }else{
-            seta = 0;
-            
         }
-    }
-    
-    
+        
+         if(!B2 && d<4){
+            seta = dec[d];
+            delay_ms(50);
+            d++;
+        }else if(d>3){
+            d=0;
+            seta = dec[d];
+        }else if(B2){
+            seta = 0;
+        }*/
+        
+        if(!B1){
+            seta = i<<a;
+            delay_ms(50);
+            a++;
+            if(a==4){
+                a=0;
+            }
+        }else{
+            a=0;
+            seta=0;
+        }
+        
+        if(!B2){
+            seta = d>>m;
+            delay_ms(50);
+            m++;
+            if(m==4){
+                m=0;
+            }
+        }else{
+            m=0;
+            seta=0;
+        }
+               
+        
+
+    }      
     return;
 }
 
@@ -75,10 +109,13 @@ void main(void)
  *           se o delyatime = 500 a função terminará e retornará para o programa
  *           principal após 500 ms.
 /******************************************************************************/
-void delay_ms(unsigned int tempo)
-{
+
+void delay_ms(unsigned int tempo){
+    
     while(--tempo)
     {
-        __delay_ms(1);//gera um atraso de 1ms
-    }  
+        __delay_ms(1);
+    }
+    
+    return;
 }
