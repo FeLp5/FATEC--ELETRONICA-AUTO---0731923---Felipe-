@@ -14,9 +14,10 @@
  
 *******************************************************************************/
 //includes do compilador
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <p18f4550.h>
+#include <pic18f4550.h>
 
 
 
@@ -28,8 +29,13 @@
 
 //define's
 #define Led_0 PORTBbits.RB0
-unsigned int time = 200;
+
+//funções de subrotina
+
+
 void delay_ms(unsigned int tempo);
+
+//main
 void main(void) {
     
     TRISB = 0x00;
