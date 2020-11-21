@@ -38,6 +38,8 @@ void chave_comando();
 
 //variáveis globais
 unsigned char flag_controle;
+unsigned int incremento_rpm;
+unsigned int incremento_velocidade;
 
 void main(void)
 {    
@@ -78,7 +80,32 @@ void main(void)
 //            } 
         if(!B1)
         {
-                 
+            flag_controle = 1;
+            chave_comando();
+        }
+        
+        if(!B0){
+            if(flag_controle == 1){
+                if(incremento_velocidade != 200){
+                    incremento_velocidade = incremento_velocidade + 100;                    
+                }
+                if(incremento_rpm != 8000){
+                    incremento_rpm = incremento_rpm + 50;                   
+                }
+
+            }else{
+                if(incremento_velocidade != 0){
+                    incremento_velocidade = incremento_velocidade - 100;
+                }
+                incremento_rpm = incremento_rpm + 50;
+            }  
+        }else{
+                if(incremento_velocidade != 0){
+                    incremento_velocidade = incremento_velocidade - 100;
+                }
+                if(incremento_rpm != 0){
+                    incremento_rpm = incremento_rpm - 50;
+                }             
         }
 
         
