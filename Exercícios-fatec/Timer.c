@@ -8,10 +8,12 @@
  Date:         07/10/2020
  Software License Agreement: Somente para fins didáticos
  *******************************************************************************
- File Description: O programa parametriza as entradas analógicas, faz a leitura delas e converte o valor de 
- tensão e devolve no display. O programa está configurado para trabalhar no PicsimLab (simulador)* 
+ File Description: Este programa simula um cluster veicular, monitorando entrada de conversor AD 
+ * informando se o tanque está na reserva ou não, e simula de acordo com os botões B0 e B1 o controle
+ * de velocidade ou aumento de rotações.
+ * 
  Change History:
- 1.0   07/10/2020  Versão inicial
+ 1.0   21/11/2020  Versão inicial
  
 *******************************************************************************/
 
@@ -29,6 +31,7 @@
 #define B0 PORTBbits.RB0
 #define B1 PORTBbits.RB1
 #define B2 PORTBbits.RB2
+#define LED_RB7 PORTBbits.RB7
 
 //Protótipos das Funções
 
@@ -40,6 +43,7 @@ void chave_comando();
 unsigned char flag_controle;
 unsigned int incremento_rpm;
 unsigned int incremento_velocidade;
+unsigned int tanque;
 
 void main(void)
 {    
@@ -74,10 +78,17 @@ void main(void)
     while(1)
     
     {      
-//        ADCON0 = 0b00000011;//Ativa a leitura
-//        while(ADCON0bits.DONE)//Enquanto a leitura não terminar no display nao aparecera        
-//            {     
-//            } 
+        ADCON0 = 0b00000011;//Ativa a leitura
+        while(ADCON0bits.DONE)//Enquanto a leitura não terminar no display nao aparecera        
+        {     
+        }
+        tanque = ADRESH + ADRESL;
+        if(tanque >= 308){
+            LED_RB7 = !LED_RB7;
+            delay_ms(100);
+        }
+        
+        
         if(!B1)
         {
             flag_controle = 1;
@@ -103,7 +114,7 @@ void main(void)
                 if(incremento_velocidade != 0){
                     incremento_velocidade = incremento_velocidade - 100;
                 }
-                if(incremento_rpm != 0){
+                if(incremento_rpm != 700){
                     incremento_rpm = incremento_rpm - 50;
                 }             
         }
@@ -116,20 +127,16 @@ void main(void)
     return;
     
 }
-
-
-
-
 /******************************************************************************               
-* Funcao:   delay_ms(unsigned int delaytime)
-* Entrada:  unsigned int delaytime - recebe valores de 0 a 65536
+* Funcao:   void chave_comando ()
+* Entrada:  void
 * Saida:    Nenhuma (void)
-* Descricao: Gera um atraso de tempo conforme o valor recebido de delaytime
-             O tempo interno é baseado no delay 1 ms. Assim, a cada loop temos o
- *           decremento da variável delaytime, até que ele atinja zero. Exemplo:
- *           se o delyatime = 500 a função terminará e retornará para o programa
- *           principal após 500 ms.
+* Descricao: Altera o flag como se fosse o ponto morto do carro
 /******************************************************************************/
+
+
+
+
 
 void chave_comando(){
     switch(flag_controle){
@@ -146,10 +153,16 @@ void chave_comando(){
     
 }
     
-
-
-
-
+/******************************************************************************               
+* Funcao:   delay_ms(unsigned int delaytime)
+* Entrada:  unsigned int delaytime - recebe valores de 0 a 65536
+* Saida:    Nenhuma (void)
+* Descricao: Gera um atraso de tempo conforme o valor recebido de delaytime
+             O tempo interno é baseado no delay 1 ms. Assim, a cada loop temos o
+ *           decremento da variável delaytime, até que ele atinja zero. Exemplo:
+ *           se o delyatime = 500 a função terminará e retornará para o programa
+ *           principal após 500 ms.
+/******************************************************************************/
 void delay_ms(unsigned int tempodeatraso)
 {
     while(--tempodeatraso)
