@@ -82,7 +82,7 @@ void main(void)
         while(ADCON0bits.DONE)//Enquanto a leitura não terminar no display nao aparecera        
         {     
         }
-        tanque = ADRESH + ADRESL;
+        tanque = (ADRESH<<8) + ADRESL;//
         if(tanque >= 308){
             LED_RB7 = !LED_RB7;
             delay_ms(100);
@@ -109,14 +109,23 @@ void main(void)
                     incremento_velocidade = incremento_velocidade - 100;
                 }
                 incremento_rpm = incremento_rpm + 50;
-            }  
+            } 
+                PosicaoCursorLCD(1,1);
+                EscreveInteiroLCD(incremento_velocidade);
+                PosicaoCursorLCD(2,1);
+                EscreveInteiroLCD(incremento_rpm);
         }else{
                 if(incremento_velocidade != 0){
                     incremento_velocidade = incremento_velocidade - 100;
                 }
                 if(incremento_rpm != 700){
                     incremento_rpm = incremento_rpm - 50;
-                }             
+                } 
+                
+                PosicaoCursorLCD(1,1);
+                EscreveInteiroLCD(incremento_velocidade);
+                PosicaoCursorLCD(2,1);
+                EscreveInteiroLCD(incremento_rpm);
         }
 
         
