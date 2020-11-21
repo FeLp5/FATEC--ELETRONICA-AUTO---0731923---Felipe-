@@ -1,87 +1,132 @@
 /*******************************************************************************
- FileName:     TIMER - FATEC SANTO ANDR√â
- Dependencies: Veja a se√ß√£o de includes
+ FileName:     Leitura de entrada analÛgica e conversor AD - FATEC SANTO ANDR…
+ Dependencies: Veja a seÁ„o de includes
  Processor:    PIC18F4550
- Compiler:     MPLAB X v3.51 + XC8 1.41
+ Compiler:     MPLAB X v3.65 + XC8 1.40
  Company:      FATEC Santo Andre
- Author:       Felipe Alves Leite Da Silva
- Date:         03/09/2020
- Software License Agreement: Somente para fins did√°ticos
+ Author:       Prof. Edson Kitani
+ Date:         07/10/2020
+ Software License Agreement: Somente para fins did·ticos
  *******************************************************************************
- File Description: Este programa gera um pisca pisca numa sa√≠da determinada.
+ File Description: O programa parametriza as entradas analÛgicas, faz a leitura delas e converte o valor de 
+ tens„o e devolve no display. O programa est· configurado para trabalhar no PicsimLab (simulador)* 
  Change History:
- 1.0   21/10/2020  Vers√£o inicial
+ 1.0   07/10/2020  Vers„o inicial
  
 *******************************************************************************/
-//includes do compilador
 
+// Includes do Compilador
+
+#include <p18f4550.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pic18f4550.h>
+
+// Includes do Projeto
+
+#include"Config.h"
+#include"displayLCD.h"
+
+#define B0 PORTBbits.RB0
+#define B1 PORTBbits.RB1
+#define B2 PORTBbits.RB2
+
+//ProtÛtipos das FunÁıes
+
+void delay_ms(unsigned int tempodeatraso);
+void chave_comando();
 
 
+//vari·veis globais
+unsigned char flag_controle;
 
-//includes do projeto
-
-#include "Config.h"
-#include "displayLCD.h"
-
-
-//define's
-#define Led_0 PORTBbits.RB0
-
-//fun√ß√µes de subrotina
-
-
-void delay_ms(unsigned int tempo);
-
-//main
-void main(void) {
+void main(void)
+{    
+    //constantes do projeto
+    const unsigned char texto_0[] = "FATEC STO. ANDRE";
+    const unsigned char texto_1[] = "CLUSTER VEICULAR";
+    const unsigned char texto_4[] = "KM/h";
+    const unsigned char texto_3[] = "RPM";
     
+    unsigned int AN0;
+   
+    //parametrizacao
+    ADCON0 = 0b00000001;
+    ADCON1 = 0x0E;
+    ADCON2 = 0x8E;
     TRISB = 0x00;
+    
+    
+    
 
-
-    TMR0ON = 1;//liga o timer 
-    T08BIT = 1;//seleciona o modo de 8bits   
-    T0CS = 0; //seleciona o clock
-    T0PS2 = 1; //define o prescaler para 1:256
-    T0PS1 = 1;    
-    T0PS0 = 1;   
-    PSA = 0; //seleciona o sinal do prescaler
-    TMR0L = 22; //carrega o timer com 22 para contar de 22 at√© 256
+    
+    //saudacao do programa
+    ConfiguraLCD();
+    DesligaCursor();
+    PosicaoCursorLCD(1,1);
+    EscreveFraseRamLCD(texto_0);
+    PosicaoCursorLCD(2,1);
+    EscreveFraseRamLCD(texto_1);
+    delay_ms(1000);
+    
     
     while(1)
-    {
-        
-        if(TMR0IF == 1)
+    
+    {      
+//        ADCON0 = 0b00000011;//Ativa a leitura
+//        while(ADCON0bits.DONE)//Enquanto a leitura n„o terminar no display nao aparecera        
+//            {     
+//            } 
+        if(!B1)
         {
-            TMR0L = 22;
-            TMR0IF = 0; //seta em zero para que ocorra sempre que o contador estourar
-            Led_0 = !Led_0;
+                 
         }
+
         
         
     }
     
+    
     return;
+    
 }
 
 
+
+
 /******************************************************************************               
-* Funcao:   delay_ms(unsigned int tempo)
-* Entrada:  unsigned int tempo - recebe valores de 0 a 65536
+* Funcao:   delay_ms(unsigned int delaytime)
+* Entrada:  unsigned int delaytime - recebe valores de 0 a 65536
 * Saida:    Nenhuma (void)
 * Descricao: Gera um atraso de tempo conforme o valor recebido de delaytime
-             O tempo interno √© baseado no delay 1 ms. Assim, a cada loop temos o
- *           decremento da vari√°vel delaytime, at√© que ele atinja zero. Exemplo:
- *           se o delyatime = 500 a fun√ß√£o terminar√° e retornar√° para o programa
- *           principal ap√≥s 500 ms.
+             O tempo interno È baseado no delay 1 ms. Assim, a cada loop temos o
+ *           decremento da vari·vel delaytime, atÈ que ele atinja zero. Exemplo:
+ *           se o delyatime = 500 a funÁ„o terminar· e retornar· para o programa
+ *           principal apÛs 500 ms.
 /******************************************************************************/
 
-void delay_ms(unsigned int tempo)
+void chave_comando(){
+    switch(flag_controle){
+        case 1:
+            flag_controle = !flag_controle;
+        break;
+        
+        case 0:
+            flag_controle = !flag_controle;
+        break;       
+    }
+    
+    
+    
+}
+    
+
+
+
+
+void delay_ms(unsigned int tempodeatraso)
 {
-    while(--tempo)
+    while(--tempodeatraso)
     {
-        __delay_ms(1);//gera um atraso de 1ms
-    }  
+        __delay_ms(1); //Gera um atraso de 1 ms
+    }
 }
