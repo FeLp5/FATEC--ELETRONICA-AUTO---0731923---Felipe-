@@ -1,16 +1,16 @@
 /*******************************************************************************
- FileName:     Seta - FATEC SANTO ANDR…
- Dependencies: Veja a seÁ„o de includes
+ FileName:     Seta - FATEC SANTO ANDR√â
+ Dependencies: Veja a se√ß√£o de includes
  Processor:    PIC18F4550
  Compiler:     MPLAB X v3.51 + XC8 1.41
  Company:      FATEC Santo Andre
  Author:       Felipe Alves Leite Da Silva
  Date:         17/09/2020
- Software License Agreement: Somente para fins did·ticos
+ Software License Agreement: Somente para fins did√°ticos
  *******************************************************************************
- File Description: Este programa simula a seta do carro, fazendo o led piscar em loop em funÁ„o de um bot„o.
+ File Description: Este programa simula a seta do carro, fazendo o led piscar em loop em fun√ß√£o de um bot√£o.
  Change History:
- 1.0   17/09/2020  Vers„o inicial
+ 1.0   17/09/2020  Vers√£o inicial
  
 *******************************************************************************/
 
@@ -104,10 +104,10 @@ void main(void)
 * Entrada:  unsigned int tempo - recebe valores de 0 a 65536
 * Saida:    Nenhuma (void)
 * Descricao: Gera um atraso de tempo conforme o valor recebido de delaytime
-             O tempo interno È baseado no delay 1 ms. Assim, a cada loop temos o
- *           decremento da vari·vel delaytime, atÈ que ele atinja zero. Exemplo:
- *           se o delyatime = 500 a funÁ„o terminar· e retornar· para o programa
- *           principal apÛs 500 ms.
+             O tempo interno √© baseado no delay 1 ms. Assim, a cada loop temos o
+ *           decremento da vari√°vel delaytime, at√© que ele atinja zero. Exemplo:
+ *           se o delyatime = 500 a fun√ß√£o terminar√° e retornar√° para o programa
+ *           principal ap√≥s 500 ms.
 /******************************************************************************/
 
 void delay_ms(unsigned int tempo){
