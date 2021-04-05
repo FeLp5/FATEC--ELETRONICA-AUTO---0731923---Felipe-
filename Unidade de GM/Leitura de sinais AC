@@ -1,0 +1,345 @@
+/*******************************************************************************
+ FileName:     Faz a leitura de sensores, calcula a média móvel e imprime no display
+ Dependencies: Veja os includes
+ Processor:    PIC18F4550
+ Compiler:     MPLAB X v3.61 + XC8 1.41
+ Company:      FATEC Santo Andre
+ Author:       Felipe Alves 
+ Date:         07/10/2020
+ Software License Agreement: Somente para fins did?ticos
+ *******************************************************************************
+ File Description: 
+ * Para o Sensor TPS foi considerado: valvula totalmente fechada tensão de 0,6 V e válvula totalmente
+ * aberta tensão de 4,4V, tensão de 5V e 0V são consideradas curto e circuito aberto respectivamente * 
+ Change History:
+ 1.0   13/03/2021  Versão inicial
+ 
+*******************************************************************************/
+
+// Includes do Compilador
+
+#include <p18f4550.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+// Includes do Projeto
+
+#include"Config.h"
+#include"displayLCD.h"
+
+//defines
+
+
+//Protótipos de funções
+
+void delay_ms(unsigned int tempodeatraso);
+void interrupt high_priority interruption();
+void interrupt low_priority interruption2();
+
+
+//variáveis globais
+unsigned char base_1ms = 10;
+unsigned char base_10ms= 100;
+unsigned char base_100ms = 1000;
+unsigned char base_1s = 1000;
+unsigned long int casaDecimal = 1000;
+unsigned long int mediaMovelTPS = 0;
+float mediaMovelACT = 0;
+float amostraTPS[10] = {0,0,0,0,0,0,0,0,0,0};
+float amostraACT[10] = {0,0,0,0,0,0,0,0,0,0};
+float valorACTFinal, valorACT;
+unsigned long int valorTPSFinalDecimal, valorTPSFinal;
+unsigned char valorTPSFinalInteiro;
+int valorTPSInteiro, valorTPSDecimal;
+//float varTPS1 =0, varTPS2, varTPS;
+//float varACT1 =0, varACT2, varACT;
+unsigned char trigger = 0, triggerVa;
+unsigned int contadorTPS, contadorConvec, contadorACT;
+    
+void main(void)
+{    
+    //constantes do projeto
+    const unsigned char texto_0[] = "---INICIANDO!---";
+    const unsigned char texto_1[] = "FATEC STO. ANDRE";
+    const unsigned char texto_2[] = "ACT:            ";
+    const unsigned char texto_3[] = "TPS:            ";
+    
+
+    unsigned char iniciar;
+
+    
+    //parametrizacao I/O's
+    TRISA = 0x03;
+    TRISB = 0x01;
+    //parametrizacao ADC
+    ADCON0 = 0b00000001;
+    ADCON1 = 0x0D;
+    ADCON2 = 0x8E;
+
+    //parametrização TIMER0
+    T0CON = 0b01000011;
+    TMR0 = 0x6A;
+//    T0CONbits.PSA = 0;
+//    T0CONbits.T08BIT = 1;
+//    T0CONbits.T0CS = 0;
+//    T0CONbits.T0SE = 0;
+//    T0CONbits.T0PS0 = 1;
+//    T0CONbits.T0PS1 = 1;
+//    T0CONbits.T0PS2 = 0;
+//    T0CONbits.TMR0ON = 1;
+    
+    
+   //parametrização interrupt
+    INTCONbits.GIE =1;
+    INTCON2bits.INTEDG0 = 0;
+    INTCON3bits.INT1IF = 0;
+    INTCONbits.RBIE = 0;
+    INTCONbits.TMR0IE = 1;
+    INTCON2bits.TMR0IP = 0;
+//    RBIP = 1;
+    INTCON2bits.INTEDG0 = 0;
+   
+    
+    //saudacao do programa
+    ConfiguraLCD();
+    DesligaCursor();
+    PosicaoCursorLCD(1,1);
+    EscreveFraseRamLCD(texto_0);
+    for(iniciar = 0; iniciar<16; iniciar++)
+    {
+        PosicaoCursorLCD(2,iniciar);
+        EscreveFraseRamLCD("|");
+        delay_ms(base_10ms);
+    }
+    LimpaDisplay();
+    PosicaoCursorLCD(2,1);
+    EscreveFraseRamLCD(texto_1);
+    delay_ms(base_1s);
+    
+    //plot do programa
+    PosicaoCursorLCD(1,1);
+    EscreveFraseRamLCD(texto_2);    
+    PosicaoCursorLCD(2,1);
+    EscreveFraseRamLCD(texto_3);
+    //termino da saudação  
+            PosicaoCursorLCD(2,5);
+            EscreveInteiroLCD(valorTPSFinalInteiro);
+            PosicaoCursorLCD(2,8);
+            EscreveFraseRamLCD(".");
+            PosicaoCursorLCD(2,9);
+            EscreveInteiroLCD(valorTPSFinalDecimal); 
+    
+    
+    
+    //deispara o timer
+    T0CONbits.TMR0ON = 1;
+    INTCONbits.INT0E = 1;
+
+    while(1)
+    {  
+
+        
+    //soma dos valores    
+        for(contadorConvec=0; contadorConvec<10;contadorConvec++){
+            mediaMovelTPS = mediaMovelTPS + amostraTPS[contadorConvec];
+            mediaMovelACT = mediaMovelACT + amostraACT[contadorConvec];
+            
+        }
+    //calculo da media    
+//        valorTPSInteiro = mediaMovelTPS/casaDecimal;
+//        valorTPSDecimal = mediaMovelTPS - casaDecimal*valorTPSInteiro;
+        mediaMovelACT = mediaMovelACT*5/10230;
+        valorACT = mediaMovelACT;
+
+        mediaMovelACT = 0;
+        mediaMovelTPS /= 10;
+    //calcula os valores dos sensores, plota no display e registra suas variações
+//        if((valorTPSInteiro+valorTPSDecimal/casaDecimal)>4.4 || (valorTPSInteiro+valorTPSDecimal/casaDecimal)<0.6){
+            valorTPSFinal = casaDecimal*(mediaMovelTPS*5/(1023*0.04222));
+            valorTPSFinalInteiro = valorTPSFinal/casaDecimal;
+            valorTPSFinalDecimal = valorTPSFinal - valorTPSFinalInteiro*casaDecimal;
+            mediaMovelTPS = 0;
+//            PosicaoCursorLCD(2,10);
+//            EscreveFraseRamLCD("   ERRO");
+//            PosicaoCursorLCD(2,5);  
+//            EscreveInteiroLCD(valorTPSFinalInteiro);
+//            PosicaoCursorLCD(2,6);  
+//            EscreveFraseRamLCD(".");
+//            PosicaoCursorLCD(2,11);  
+//            EscreveInteiroLCD(valorTPSFinalDecimal);
+        
+        
+//        if((valorTPSFinalDecimal+(valorTPSFinalInteiro*casaDecimal)) < casaDecimal)
+//        {
+//
+//            PosicaoCursorLCD(2,5);
+//            EscreveInteiroLCD(valorTPSFinalInteiro);
+//            PosicaoCursorLCD(2,8);
+//            EscreveFraseRamLCD(".");
+//            PosicaoCursorLCD(2,11);
+//            EscreveInteiroLCD(0);
+//            PosicaoCursorLCD(2,12);
+//            EscreveInteiroLCD(valorTPSFinalDecimal);
+         if (valorTPSFinalInteiro < 100 && valorTPSFinalInteiro > 10){
+            PosicaoCursorLCD(2,5);
+            EscreveInteiroLCD(valorTPSFinalInteiro);
+            PosicaoCursorLCD(2,7);
+            EscreveFraseRamLCD(".");
+            PosicaoCursorLCD(2,8);
+            EscreveInteiroLCD(valorTPSFinalDecimal);       
+        }else if(valorTPSFinalInteiro < 10 && valorTPSFinalInteiro < 100){
+            PosicaoCursorLCD(2,5);
+            EscreveInteiroLCD(valorTPSFinalInteiro);
+            PosicaoCursorLCD(2,6);
+            EscreveFraseRamLCD(".");
+            PosicaoCursorLCD(2,7);
+            EscreveInteiroLCD(valorTPSFinalDecimal);              
+        }else{
+            PosicaoCursorLCD(2,5);
+            EscreveInteiroLCD(valorTPSFinalInteiro);
+            PosicaoCursorLCD(2,8);
+            EscreveFraseRamLCD(".");
+            PosicaoCursorLCD(2,9);
+            EscreveInteiroLCD(valorTPSFinalDecimal);  
+        }  
+            
+            PosicaoCursorLCD(2,5);
+            EscreveInteiroLCD(valorTPSFinalInteiro);
+            PosicaoCursorLCD(2,8);
+            EscreveFraseRamLCD(".");
+            PosicaoCursorLCD(2,9);
+            EscreveInteiroLCD(valorTPSFinalDecimal); 
+            
+            
+//        }else{
+//            if(amostraTPS[0]==amostraTPS[9]&& trigger ==0){
+//                varTPS1 = valorTPSFinal;
+//                triggerVa = 1;
+//            }else if(amostraTPS[0]==amostraTPS[9]&& trigger ==1){
+//                varTPS2 = valorTPSFinal;
+//                triggerVa= 0;
+//            }
+//            valorTPSFinal = ((valorTPSInteiro+valorTPSDecimal/casaDecimal)-0.6)/0.04222;
+//            valorTPSFinalInteiro = valorTPSFinal/casaDecimal;
+//            valorTPSFinalDecimal = valorTPSFinal - valorTPSFinalInteiro*casaDecimal;
+//            PosicaoCursorLCD(2,5);  
+//            EscreveInteiroLCD(valorTPSFinalInteiro);
+//            PosicaoCursorLCD(2,6);  
+//            EscreveFraseRamLCD(".");
+//            PosicaoCursorLCD(2,11);  
+//            EscreveInteiroLCD(valorTPSFinalDecimal);
+        //} 
+        
+
+
+        valorACTFinal = (valorACT-0.6)/0.04222;
+        PosicaoCursorLCD(1,11);
+        EscreveFraseRamLCD(" C");
+        PosicaoCursorLCD(1,5);
+        EscreveFloatLCD(valorACTFinal, 2);
+        
+    //Sistema para calculo da variação (está atrelada a uma interrupção externa)    
+//        if(trigger == 1){
+//            PosicaoCursorLCD(1,5);
+//            EscreveFraseRamLCD("            ");
+//            PosicaoCursorLCD(2,5);
+//            EscreveFraseRamLCD("            ");
+//            varTPS2 = (varTPS2)*100/90;
+//            varTPS1 = (varTPS1)*100/90;
+//            varTPS = varTPS2 - varTPS1;
+//            if(varTPS<0){
+//                varTPS = -(varTPS);
+//            }
+//            PosicaoCursorLCD(2,11);
+//            EscreveFraseRamLCD(" %    ");
+//            PosicaoCursorLCD(2,5);
+//            EscreveFloatLCD((varTPS), 2);
+//            delay_ms(5*base_100ms);
+//            trigger = 0;
+//        }else{
+//            trigger = 0;
+//        }
+        
+    //move os valores para a esquerda descartando o primeiro valor    
+        for(contadorConvec=0; contadorConvec<9;contadorConvec++){
+            amostraTPS[contadorConvec] = amostraTPS[contadorConvec+1];
+            amostraACT[contadorConvec] = amostraACT[contadorConvec+1];
+        }
+        
+
+        
+    }
+    
+    
+    return;
+    
+}
+/******************************************************************************               
+* Funcao:  void interrupt high_priority interruption()
+* Entrada:  void
+* Saida:    Nenhuma (void)
+* Descricao: Rotina de interrupção do pic
+/******************************************************************************/
+
+
+
+void interrupt high_priority interruption()
+{
+    if(TMR0IF)
+    {
+        TMR0IF = 0;
+        base_1ms--;
+        base_100ms--;
+        
+        if(base_100ms == 0){
+
+            base_100ms = 1000;
+            //inicia a leitura adc do sensor
+            ADCON0 = 0b00000111;
+            
+            while(ADCON0bits.DONE){}
+            amostraTPS [contadorTPS] = ((ADRESH << 8) + ADRESL);
+            contadorTPS++;
+            if(contadorTPS>9){
+                contadorTPS = 9;
+            }
+ 
+        }
+        if(base_1ms == 0){
+            base_10ms = 10;
+            //inicia a leitura adc do sensor
+            ADCON0 = 0b00000011;
+            while(ADCON0bits.DONE){}
+            amostraACT [contadorACT] = ((ADRESH << 8) + ADRESL);
+            contadorACT++;
+            if(contadorACT>9){
+                contadorACT = 9;
+            }
+        }
+        TMR0 = 0x6A +  TMR0;
+    }
+    if(INTCONbits.INT0IF && INTCONbits.INT0IE)
+    {
+            INT0IF = 0;
+            trigger = !trigger;
+            T0CONbits.TMR0ON = 1;
+    }
+}
+    
+/******************************************************************************               
+* Funcao:   delay_ms(unsigned int delaytime)
+* Entrada:  unsigned int delaytime - recebe valores de 0 a 65536
+* Saida:    Nenhuma (void)
+* Descricao: Gera um atraso de tempo conforme o valor recebido de delaytime
+             O tempo interno ? baseado no delay 1 ms. Assim, a cada loop temos o
+ *           decremento da vari?vel delaytime, at? que ele atinja zero. Exemplo:
+ *           se o delyatime = 500 a fun??o terminar? e retornar? para o programa
+ *           principal ap?s 500 ms.
+/******************************************************************************/
+void delay_ms(unsigned int tempodeatraso)
+{
+    while(--tempodeatraso)
+    {
+        __delay_ms(1); //Gera um atraso de 1 ms
+    }
+}
