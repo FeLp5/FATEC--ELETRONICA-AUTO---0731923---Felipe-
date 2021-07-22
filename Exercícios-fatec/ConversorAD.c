@@ -4,7 +4,7 @@
  Processor:    PIC18F4550
  Compiler:     MPLAB X v3.65 + XC8 1.40
  Company:      FATEC Santo Andre
- Author:       Prof. Edson Kitani
+ Author:       Felipe
  Date:         07/10/2020
  Software License Agreement: Somente para fins didáticos
  *******************************************************************************
